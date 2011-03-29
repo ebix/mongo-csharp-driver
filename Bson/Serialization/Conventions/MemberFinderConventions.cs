@@ -32,6 +32,44 @@ namespace MongoDB.Bson.Serialization.Conventions {
         IEnumerable<MemberInfo> FindMembers(Type type);
     }
 
+    public class NonPublicMemberFinderConvention : IMemberFinderConvention {
+        /// <summary>
+        /// Finds the members of a class that are serialized.
+        /// </summary>
+        /// <param name="type">The class.</param>
+        /// <returns>The members that are serialized.</returns>
+        public IEnumerable<MemberInfo> FindMembers(
+            Type type
+        ) {
+            foreach (var fieldInfo in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)) {
+                if (fieldInfo.IsInitOnly || fieldInfo.IsLiteral || fieldInfo.Name.EndsWith(">k__BackingField")) { // we can't write or it's a property backing field
+                    continue;
+                }
+
+                yield return fieldInfo;
+            }
+
+            foreach (var propertyInfo in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)) {
+                if (!propertyInfo.CanRead || (!propertyInfo.CanWrite && type.Namespace != null)) { // we can't write or it is anonymous...
+                    continue;
+                }
+
+                // skip indexers
+                if (propertyInfo.GetIndexParameters().Length != 0) {
+                    continue;
+                }
+
+                // skip overridden properties (they are already included by the base class)
+                var getMethodInfo = propertyInfo.GetGetMethod(true);
+                if (getMethodInfo.IsVirtual && getMethodInfo.GetBaseDefinition().DeclaringType != type) {
+                    continue;
+                }
+
+                yield return propertyInfo;
+            }
+        }
+    }
+
     /// <summary>
     /// Represents a member finder convention where all public read/write fields and properties are serialized.
     /// </summary>

@@ -48,6 +48,25 @@ namespace MongoDB.Bson.Serialization.Conventions {
         }
     }
 
+    public class PascalCaseLeadingUnderscoreElementNameContention : IElementNameConvention  {
+        /// <summary>
+        /// Gets the element name for a member.
+        /// </summary>
+        /// <param name="member">The member.</param>
+        /// <returns>The element name.</returns>
+        public string GetElementName(
+            MemberInfo member
+        ) {
+            string name = member.Name;
+
+            if (!name.StartsWith("_"))
+                return name;
+
+            else
+                return Char.ToUpperInvariant(name[1]) + name.Substring(2);
+        }
+    }
+
     /// <summary>
     /// Represents an element name convention where the element name is the member name with the first character lower cased.
     /// </summary>
