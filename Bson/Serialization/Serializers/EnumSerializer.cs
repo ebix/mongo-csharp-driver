@@ -91,7 +91,7 @@ namespace MongoDB.Bson.Serialization.Serializers {
         ) {
             var actualType = value.GetType();
             VerifySerializeTypes(nominalType, actualType);
-            var representation = (options == null) ? 0 : ((RepresentationSerializationOptions) options).Representation;
+            var representation = (options == null) ? BsonType.String : ((RepresentationSerializationOptions) options).Representation;
             switch (representation) {
                 case 0:
                     var underlyingTypeCode = Type.GetTypeCode(Enum.GetUnderlyingType(actualType));
